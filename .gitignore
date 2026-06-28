@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.trae/
+.idea/
+
+# Windows
+Thumbs.db
+*.log

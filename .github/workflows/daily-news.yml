@@ -1,0 +1,33 @@
+name: AI日报定时推送
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+
+  workflow_dispatch:
+
+jobs:
+  send-news:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Send AI news
+      env:
+        MAIL_SENDER: ${{ secrets.MAIL_SENDER }}
+        MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+        MAIL_RECEIVER: ${{ secrets.MAIL_RECEIVER }}
+        ZHIQI_API_KEY: ${{ secrets.ZHIQI_API_KEY }}
+      run: python main.py
