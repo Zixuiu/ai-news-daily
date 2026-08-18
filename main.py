@@ -47,13 +47,24 @@ ZHIQI_API_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
 
 def contains_ai_keyword(title):
     title_lower = title.lower()
+    
+    # 先检查是否包含 AI 关键词
+    has_ai = False
+    for kw in AI_KEYWORDS:
+        if kw.lower() in title_lower:
+            has_ai = True
+            break
+    
+    # 如果包含 AI 关键词，直接保留（不管黑名单）
+    if has_ai:
+        return True
+    
+    # 如果不包含 AI 关键词，再检查黑名单，排除非 AI 内容
     for kw in NON_AI_KEYWORDS:
         if kw.lower() in title_lower:
             return False
-    for kw in AI_KEYWORDS:
-        if kw.lower() in title_lower:
-            return True
-    return False
+    
+    return True
 
 def polish_news_titles(news_list):
     if not ZHIQI_API_KEY:
