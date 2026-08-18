@@ -341,7 +341,6 @@ def fetch_all_news():
             unique_news.append(news)
     
     return unique_news[:NEWS_COUNT]
-
 def generate_email_content(news_list):
     today = datetime.now().strftime('%Y年%m月%d日')
     
@@ -353,7 +352,6 @@ def generate_email_content(news_list):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI日报 - {today}</title>
     <style>
-        /* 全局样式 - 使用更美观的字体 */
         body {{
             margin: 0;
             padding: 20px;
@@ -370,7 +368,6 @@ def generate_email_content(news_list):
             padding: 28px 32px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.08);
         }}
-        /* 头部区域 */
         .header {{
             text-align: center;
             padding-bottom: 20px;
@@ -383,9 +380,6 @@ def generate_email_content(news_list):
             font-weight: 700;
             color: #1a1a2e;
             letter-spacing: 1px;
-        }}
-        .header h1 .emoji {{
-            margin-right: 6px;
         }}
         .header .date {{
             margin: 4px 0 0;
@@ -403,7 +397,6 @@ def generate_email_content(news_list):
             border-radius: 20px;
             font-weight: 500;
         }}
-        /* 新闻列表 - 用 <ul> 代替 <ol>，完全手动控制序号 */
         .news-list {{
             list-style: none;
             padding: 0;
@@ -417,10 +410,6 @@ def generate_email_content(news_list):
             background: #f8f9fc;
             border-radius: 10px;
             border-left: 4px solid #4f46e5;
-            transition: background 0.15s;
-        }}
-        .news-item:hover {{
-            background: #f0f2ff;
         }}
         .news-number {{
             flex-shrink: 0;
@@ -452,16 +441,6 @@ def generate_email_content(news_list):
             color: #4f46e5;
             text-decoration: underline;
         }}
-        .news-source {{
-            display: inline-block;
-            margin-top: 3px;
-            font-size: 11px;
-            color: #999;
-            background: #eef2f5;
-            padding: 0 10px;
-            border-radius: 10px;
-        }}
-        /* 底部 */
         .footer {{
             margin-top: 24px;
             padding-top: 18px;
@@ -476,7 +455,6 @@ def generate_email_content(news_list):
         .footer .heart {{
             color: #ef4444;
         }}
-        /* 移动端适配 */
         @media (max-width: 480px) {{
             .container {{ padding: 16px; }}
             .header h1 {{ font-size: 20px; }}
@@ -487,25 +465,21 @@ def generate_email_content(news_list):
 </head>
 <body>
     <div class="container">
-        <!-- 头部 -->
         <div class="header">
             <h1><span class="emoji">🤖</span>AI 每日速递</h1>
             <div class="date">{today}</div>
             <div class="count">📰 共 {len(news_list)} 条</div>
         </div>
 
-        <!-- 新闻列表 - 使用 <ul>，手动控制序号 -->
         <ul class="news-list">
 """
     
     for i, news in enumerate(news_list, 1):
-        source = news.get('source', '资讯')
         html += f"""
             <li class="news-item">
                 <span class="news-number">{i}</span>
                 <div class="news-body">
                     <a href="{news['link']}" target="_blank">{news['title']}</a>
-                    <div><span class="news-source">{source}</span></div>
                 </div>
             </li>
 """
@@ -513,10 +487,8 @@ def generate_email_content(news_list):
     html += f"""
         </ul>
 
-        <!-- 底部 -->
         <div class="footer">
             <p>📧 由 GitHub Actions 自动生成 · 每日 UTC 1:00 推送</p>
-            <p>📡 数据来源：36氪 · 机器之心 · 量子位 · TechCrunch 等</p>
             <p><span class="heart">❤️</span> 感谢阅读，祝你今天有个好心情！</p>
         </div>
     </div>
