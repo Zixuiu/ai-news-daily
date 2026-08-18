@@ -442,7 +442,7 @@ def generate_email_content(news_list):
             min-width: 0;
         }}
         .news-body a {{
-            font-size: 15px;
+            font-size: 20px;
             font-weight: 500;
             color: #1a1a2e;
             text-decoration: none;
