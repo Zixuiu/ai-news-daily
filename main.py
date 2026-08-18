@@ -350,32 +350,176 @@ def generate_email_content(news_list):
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI日报 - {today}</title>
     <style>
-        body {{ font-family: 'Microsoft YaHei', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ text-align: center; margin-bottom: 20px; }}
-        .header h1 {{ margin: 0; font-size: 20px; color: #333; }}
-        .header p {{ margin: 5px 0 0; font-size: 12px; color: #999; }}
-        .news-list {{ list-style: none; padding: 0; }}
-        .news-item {{ padding: 8px 0; border-bottom: 1px dashed #eee; }}
-        .news-item:last-child {{ border-bottom: none; }}
-        .news-item a {{ font-size: 14px; color: #333; text-decoration: none; line-height: 1.6; }}
-        .news-item a:hover {{ color: #667eea; }}
+        /* 全局样式 - 使用更美观的字体 */
+        body {{
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #1a1a2e;
+            line-height: 1.6;
+        }}
+        .container {{
+            max-width: 620px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 28px 32px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }}
+        /* 头部区域 */
+        .header {{
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f2f5;
+            margin-bottom: 20px;
+        }}
+        .header h1 {{
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a2e;
+            letter-spacing: 1px;
+        }}
+        .header h1 .emoji {{
+            margin-right: 6px;
+        }}
+        .header .date {{
+            margin: 4px 0 0;
+            font-size: 14px;
+            color: #888;
+            letter-spacing: 1px;
+        }}
+        .header .count {{
+            display: inline-block;
+            margin-top: 6px;
+            padding: 2px 16px;
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: 12px;
+            border-radius: 20px;
+            font-weight: 500;
+        }}
+        /* 新闻列表 - 用 <ul> 代替 <ol>，完全手动控制序号 */
+        .news-list {{
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }}
+        .news-item {{
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            background: #f8f9fc;
+            border-radius: 10px;
+            border-left: 4px solid #4f46e5;
+            transition: background 0.15s;
+        }}
+        .news-item:hover {{
+            background: #f0f2ff;
+        }}
+        .news-number {{
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            background: #4f46e5;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 50%;
+            margin-right: 14px;
+            margin-top: 2px;
+        }}
+        .news-body {{
+            flex: 1;
+            min-width: 0;
+        }}
+        .news-body a {{
+            font-size: 15px;
+            font-weight: 500;
+            color: #1a1a2e;
+            text-decoration: none;
+            line-height: 1.5;
+        }}
+        .news-body a:hover {{
+            color: #4f46e5;
+            text-decoration: underline;
+        }}
+        .news-source {{
+            display: inline-block;
+            margin-top: 3px;
+            font-size: 11px;
+            color: #999;
+            background: #eef2f5;
+            padding: 0 10px;
+            border-radius: 10px;
+        }}
+        /* 底部 */
+        .footer {{
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 2px solid #f0f2f5;
+            text-align: center;
+        }}
+        .footer p {{
+            margin: 2px 0;
+            font-size: 12px;
+            color: #aaa;
+        }}
+        .footer .heart {{
+            color: #ef4444;
+        }}
+        /* 移动端适配 */
+        @media (max-width: 480px) {{
+            .container {{ padding: 16px; }}
+            .header h1 {{ font-size: 20px; }}
+            .news-item {{ padding: 10px 12px; }}
+            .news-body a {{ font-size: 14px; }}
+        }}
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🤖 AI日报 {today}</h1>
-        <p>今日精选 {len(news_list)} 条</p>
-    </div>
-    <ol class="news-list">
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1><span class="emoji">🤖</span>AI 每日速递</h1>
+            <div class="date">{today}</div>
+            <div class="count">📰 共 {len(news_list)} 条</div>
+        </div>
+
+        <!-- 新闻列表 - 使用 <ul>，手动控制序号 -->
+        <ul class="news-list">
 """
     
     for i, news in enumerate(news_list, 1):
-        html += f"<li class='news-item'><span style='color:#667eea;font-weight:bold;margin-right:8px;'>{i}.</span><a href='{news['link']}' target='_blank'>{news['title']}</a></li>\n"
-    
-    html += """
-    </ol>
+        source = news.get('source', '资讯')
+        html += f"""
+            <li class="news-item">
+                <span class="news-number">{i}</span>
+                <div class="news-body">
+                    <a href="{news['link']}" target="_blank">{news['title']}</a>
+                    <div><span class="news-source">{source}</span></div>
+                </div>
+            </li>
+"""
+
+    html += f"""
+        </ul>
+
+        <!-- 底部 -->
+        <div class="footer">
+            <p>📧 由 GitHub Actions 自动生成 · 每日 UTC 1:00 推送</p>
+            <p>📡 数据来源：36氪 · 机器之心 · 量子位 · TechCrunch 等</p>
+            <p><span class="heart">❤️</span> 感谢阅读，祝你今天有个好心情！</p>
+        </div>
+    </div>
 </body>
 </html>
 """
