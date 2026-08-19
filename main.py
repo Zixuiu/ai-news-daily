@@ -24,17 +24,6 @@ AI_KEYWORDS = [
     '智能', '机器人', '自动化',
 ]
 
-NON_AI_KEYWORDS = [
-    '手机', '电脑', '笔记本', '平板', '智能手表', '智能手环',
-    '汽车', '手机游戏', '手游', '硬件', '处理器',
-    '软件', '操作系统', 'iOS', 'Android', 'Windows',
-    '互联网', '电商', '社交', '视频', '直播', '短视频',
-    '微信', '支付宝', '腾讯', '阿里巴巴', '字节跳动',
-    '股价', '投资', '上市', '融资', '创业', '商业',
-    '科技', '数码', '消费', '评测', '开箱', '体验',
-    'AIE', 'AIR', 'AIO', 'AIP', 'AIB', 'AIC', 'AID',
-]
-
 SMTP_CONFIG = {
     'host': 'smtp.qq.com',
     'port': 465,
@@ -54,16 +43,6 @@ def contains_ai_keyword(title):
             return True
     return False
 
-
-def is_obviously_non_ai(title):
-    """标题不含 AI 关键词、又命中明显非 AI 关键词，判为与 AI 无关"""
-    if contains_ai_keyword(title):
-        return False
-    title_lower = title.lower()
-    for kw in NON_AI_KEYWORDS:
-        if kw.lower() in title_lower:
-            return True
-    return False
 
 def polish_news_titles(news_list):
     if not ZHIQI_API_KEY:
@@ -144,13 +123,13 @@ def filter_ai_news_by_ai(news_list):
         resp = requests.post(ZHIQI_API_URL, headers=headers, json=payload, timeout=60)
         resp.raise_for_status()
         content = resp.json()['choices'][0]['message']['content']
-        keep = {int(x) for x in re.findall(r'\d+', content)} - {0}
+        keep = {int(x) for x in re.findall(r'\d+', content)}
+        keep.discard(0)
         result = [n for i, n in enumerate(news_list, 1) if i in keep]
-        if result:
-            print(f"AI语义过滤: {len(news_list)} -> {len(result)} 条")
-            return result
+        print(f"AI语义过滤: {len(news_list)} -> {len(result)} 条")
+        return result
     except Exception as e:
-        print(f"AI语义过滤失败，沿用关键词过滤结果: {e}")
+        print(f"AI语义过滤失败，保留关键词白名单结果: {e}")
 
     return news_list
 
@@ -224,7 +203,7 @@ def fetch_jqnews():
         url = 'https://www.jiqizhixin.net/rss'
         feed = feedparser.parse(url)
         for entry in feed.entries[:15]:
-            if not is_obviously_non_ai(entry.title):
+            if contains_ai_keyword(entry.title):
                 news.append({
                     'title': entry.title,
                     'link': entry.link,
@@ -244,7 +223,7 @@ def fetch_qbitai():
         url = 'https://www.qbitai.com/feed'
         feed = feedparser.parse(url)
         for entry in feed.entries[:15]:
-            if not is_obviously_non_ai(entry.title):
+            if contains_ai_keyword(entry.title):
                 news.append({
                     'title': entry.title,
                     'link': entry.link,
@@ -264,7 +243,7 @@ def fetch_aifrontline():
         url = 'https://www.aifrontline.com/feed'
         feed = feedparser.parse(url)
         for entry in feed.entries[:15]:
-            if not is_obviously_non_ai(entry.title):
+            if contains_ai_keyword(entry.title):
                 news.append({
                     'title': entry.title,
                     'link': entry.link,
@@ -324,7 +303,7 @@ def fetch_aihuo():
         url = 'https://www.aichatfire.com/feed'
         feed = feedparser.parse(url)
         for entry in feed.entries[:15]:
-            if not is_obviously_non_ai(entry.title):
+            if contains_ai_keyword(entry.title):
                 news.append({
                     'title': entry.title,
                     'link': entry.link,
