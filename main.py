@@ -15,8 +15,9 @@ AI_KEYWORDS = [
     'AIGC', 'AI绘画', 'AI写作', '语音助手', '自动驾驶',
     'NLP', '计算机视觉', 'Transformer', 'BERT',
     '扩散模型', 'Stable Diffusion', 'Midjourney', 'DALL·E',
-    'Gemini', 'Claude', '文心一言', '通义千问', '讯飞星火',
-    'AI芯片', 'GPU', '英伟达', 'prompt', '提示词', '微调',
+    'Gemini', 'Claude', 'DeepSeek', '豆包', 'kimi', '智谱', '文心一言', '通义千问', '讯飞星火',
+    'glm', '千问', 'qwen', 'OpenAI', 'Anthropic', 'Grok', 'Llama', 'Gemma', 'Mistral',
+    '智能体', 'Agent', '多模态', '生成式', '无人机', 'AI芯片', 'GPU', '英伟达', 'prompt', '提示词', '微调',
     '大语言模型', '生成式AI', 'AI应用', 'AI工具', 'AI助手',
     'AI编程', 'AI搜索', 'AI语音', 'AI视频', 'AI对话',
     'AI开发', 'AI框架', 'AI平台', 'AI服务', 'AI技术',
@@ -46,25 +47,23 @@ ZHIQI_API_KEY = os.environ.get('ZHIQI_API_KEY', '')
 ZHIQI_API_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
 
 def contains_ai_keyword(title):
+    """白名单过滤：只有标题命中 AI 关键词才保留，杜绝无关内容混入日报"""
     title_lower = title.lower()
-    
-    # 先检查是否包含 AI 关键词
-    has_ai = False
     for kw in AI_KEYWORDS:
         if kw.lower() in title_lower:
-            has_ai = True
-            break
-    
-    # 如果包含 AI 关键词，直接保留（不管黑名单）
-    if has_ai:
-        return True
-    
-    # 如果不包含 AI 关键词，再检查黑名单，排除非 AI 内容
+            return True
+    return False
+
+
+def is_obviously_non_ai(title):
+    """标题不含 AI 关键词、又命中明显非 AI 关键词，判为与 AI 无关"""
+    if contains_ai_keyword(title):
+        return False
+    title_lower = title.lower()
     for kw in NON_AI_KEYWORDS:
         if kw.lower() in title_lower:
-            return False
-    
-    return True
+            return True
+    return False
 
 def polish_news_titles(news_list):
     if not ZHIQI_API_KEY:
@@ -113,6 +112,48 @@ def polish_news_titles(news_list):
         print(f"润色失败: {e}")
     
     return news_list
+
+def filter_ai_news_by_ai(news_list):
+    """用 GLM 对标题做 AI 相关性语义过滤，剔除与 AI 无关的新闻（兜底保险）"""
+    if not ZHIQI_API_KEY:
+        print("未配置智谱API密钥，跳过AI语义过滤")
+        return news_list
+
+    if len(news_list) > 40:
+        news_list = news_list[:40]
+
+    titles_str = "\n".join(f"{i+1}. {n['title']}" for i, n in enumerate(news_list))
+
+    prompt = (
+        "以下是一批新闻标题，请判断每一条是否与人工智能(AI)真正相关"
+        "（如大模型、机器学习、AI应用、AI芯片、机器人、AI公司或产品动态等）。\n"
+        "凡与AI无关的内容（例如普通手机数码、汽车、明星娱乐、企业融资、"
+        "非AI的营销活动等）必须排除。\n\n"
+        f"{titles_str}\n\n"
+        "请只输出你认为与AI相关的标题序号，用英文逗号分隔（如：1,3,5）。"
+        "若没有相关项就输出0。不要输出任何其它内容。"
+    )
+
+    try:
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {ZHIQI_API_KEY}'}
+        payload = {
+            'model': 'glm-4-flash',
+            'messages': [{'role': 'user', 'content': prompt}],
+            'temperature': 0.2
+        }
+        resp = requests.post(ZHIQI_API_URL, headers=headers, json=payload, timeout=60)
+        resp.raise_for_status()
+        content = resp.json()['choices'][0]['message']['content']
+        keep = {int(x) for x in re.findall(r'\d+', content)} - {0}
+        result = [n for i, n in enumerate(news_list, 1) if i in keep]
+        if result:
+            print(f"AI语义过滤: {len(news_list)} -> {len(result)} 条")
+            return result
+    except Exception as e:
+        print(f"AI语义过滤失败，沿用关键词过滤结果: {e}")
+
+    return news_list
+
 
 def fetch_hackernews_ai():
     news = []
@@ -183,13 +224,14 @@ def fetch_jqnews():
         url = 'https://www.jiqizhixin.net/rss'
         feed = feedparser.parse(url)
         for entry in feed.entries[:15]:
-            news.append({
-                'title': entry.title,
-                'link': entry.link,
-                'source': '机器之心',
-                'date': entry.published if hasattr(entry, 'published') else '',
-                'lang': 'zh'
-            })
+            if not is_obviously_non_ai(entry.title):
+                news.append({
+                    'title': entry.title,
+                    'link': entry.link,
+                    'source': '机器之心',
+                    'date': entry.published if hasattr(entry, 'published') else '',
+                    'lang': 'zh'
+                })
             if len(news) >= 8:
                 break
     except Exception as e:
@@ -202,13 +244,14 @@ def fetch_qbitai():
         url = 'https://www.qbitai.com/feed'
         feed = feedparser.parse(url)
         for entry in feed.entries[:15]:
-            news.append({
-                'title': entry.title,
-                'link': entry.link,
-                'source': '量子位',
-                'date': entry.published if hasattr(entry, 'published') else '',
-                'lang': 'zh'
-            })
+            if not is_obviously_non_ai(entry.title):
+                news.append({
+                    'title': entry.title,
+                    'link': entry.link,
+                    'source': '量子位',
+                    'date': entry.published if hasattr(entry, 'published') else '',
+                    'lang': 'zh'
+                })
             if len(news) >= 8:
                 break
     except Exception as e:
@@ -221,13 +264,14 @@ def fetch_aifrontline():
         url = 'https://www.aifrontline.com/feed'
         feed = feedparser.parse(url)
         for entry in feed.entries[:15]:
-            news.append({
-                'title': entry.title,
-                'link': entry.link,
-                'source': 'AI前线',
-                'date': entry.published if hasattr(entry, 'published') else '',
-                'lang': 'zh'
-            })
+            if not is_obviously_non_ai(entry.title):
+                news.append({
+                    'title': entry.title,
+                    'link': entry.link,
+                    'source': 'AI前线',
+                    'date': entry.published if hasattr(entry, 'published') else '',
+                    'lang': 'zh'
+                })
             if len(news) >= 6:
                 break
     except Exception as e:
@@ -280,13 +324,14 @@ def fetch_aihuo():
         url = 'https://www.aichatfire.com/feed'
         feed = feedparser.parse(url)
         for entry in feed.entries[:15]:
-            news.append({
-                'title': entry.title,
-                'link': entry.link,
-                'source': 'AI火',
-                'date': entry.published if hasattr(entry, 'published') else '',
-                'lang': 'zh'
-            })
+            if not is_obviously_non_ai(entry.title):
+                news.append({
+                    'title': entry.title,
+                    'link': entry.link,
+                    'source': 'AI火',
+                    'date': entry.published if hasattr(entry, 'published') else '',
+                    'lang': 'zh'
+                })
             if len(news) >= 5:
                 break
     except Exception as e:
@@ -535,7 +580,9 @@ def main():
         return
     
     print(f"获取到 {len(news_list)} 条新闻")
-    
+
+    news_list = filter_ai_news_by_ai(news_list)
+
     news_list = polish_news_titles(news_list)
     
     html = generate_email_content(news_list)
