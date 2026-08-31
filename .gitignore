@@ -1,0 +1,44 @@
+# ===== Python 缓存 =====
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+
+# ===== IDE / 系统 =====
+.vscode/
+.trae/
+.idea/
+Thumbs.db
+.DS_Store
+*.log
+
+# ===== 密钥 / 本地凭据（绝不入库）=====
+run.bat
+chat_test.py
+gen_preview_v9.py
+gen_preview_real.py
+verify_style08.py
+send_styles_preview.py
+send_styles_preview_v2.py
+gen_email_styles.py
+gen_email_styles_inline.py
+gen_email_styles_table.py
+patch_main.py
+.env
+*.token
+
+# ===== 生成物 / 预览（非源码，体积大）=====
+email_*.html
+email_styles/
+email_styles_v2/
+email_preview_*.html
+
+# ===== 本地工作区记忆（含密钥日志，不入库）=====
+.workbuddy/
+
+# ===== 父仓库 .git 备份（非本项目源码）=====
+.git_bak_keep/

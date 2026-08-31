@@ -1,0 +1,7 @@
+@echo off
+set MAIL_SENDER=your-email@qq.com
+set MAIL_PASSWORD=your-qq-auth-code
+set MAIL_RECEIVER=your-receiver@qq.com
+set ZHIQI_API_KEY=your-zhipu-api-key
+python main.py
+pause
