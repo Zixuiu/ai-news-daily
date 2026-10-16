@@ -29,7 +29,7 @@ SMTP_CONFIG = {
     'port': 465,
     'sender': os.environ.get('MAIL_SENDER', ''),
     'password': os.environ.get('MAIL_PASSWORD', ''),
-    'receiver': os.environ.get('MAIL_RECEIVER', ''),
+    'receivers': [x.strip() for x in os.environ.get('MAIL_RECEIVER', '').split(',') if x.strip()],
 }
 
 ZHIQI_API_KEY = os.environ.get('ZHIQI_API_KEY', '')
@@ -548,25 +548,24 @@ def generate_email_content(news_list):
     )
     return html
 
-
 def send_email(html_content):
-    if not SMTP_CONFIG['sender'] or not SMTP_CONFIG['password'] or not SMTP_CONFIG['receiver']:
+    receivers = SMTP_CONFIG['receivers']
+    if not SMTP_CONFIG['sender'] or not SMTP_CONFIG['password'] or not receivers:
         raise ValueError("请配置邮箱环境变量: MAIL_SENDER, MAIL_PASSWORD, MAIL_RECEIVER")
     
     today = datetime.now().strftime('%Y-%m-%d')
     msg = MIMEMultipart()
     msg['From'] = SMTP_CONFIG['sender']
-    msg['To'] = SMTP_CONFIG['receiver']
+    msg['To'] = ', '.join(receivers)
     msg['Subject'] = f"🤖 AI日报 {today}"
     
     msg.attach(MIMEText(html_content, 'html', 'utf-8'))
     
     with smtplib.SMTP_SSL(SMTP_CONFIG['host'], SMTP_CONFIG['port']) as server:
         server.login(SMTP_CONFIG['sender'], SMTP_CONFIG['password'])
-        server.sendmail(SMTP_CONFIG['sender'], SMTP_CONFIG['receiver'], msg.as_string())
+        server.sendmail(SMTP_CONFIG['sender'], receivers, msg.as_string())
     
-    print(f"邮件发送成功: {SMTP_CONFIG['receiver']}")
-
+    print(f"邮件发送成功: {', '.join(receivers)}")
 def main():
     print(f"开始抓取 AI 新闻 ({datetime.now()})...")
     
