@@ -519,7 +519,7 @@ def generate_email_content(news_list):
             '<td width="40" align="center" valign="middle" style="padding:14px 12px;border-bottom:1px solid #eef1f5;font-family:' + FONT + ';">'
             '<span style="color:#0b2545;font-weight:700;font-size:14px;font-family:' + FONT + ';">' + str(idx) + '</span></td>'
             '<td valign="middle" style="padding:14px 12px;border-bottom:1px solid #eef1f5;font-family:' + FONT + ';">'
-            '<span style="color:#1a2436;font-size:18px;line-height:1.5;font-weight:500;font-family:' + FONT + ';">' + title + '</span></td>'
+            '<span style="color:#1a2436;font-size:24px;line-height:1.5;font-weight:500;font-family:' + FONT + ';">' + title + '</span></td>'
             '<td align="center" valign="middle" style="padding:14px 12px;border-bottom:1px solid #eef1f5;font-family:' + FONT + ';">'
             '<a href="' + link + '" style="color:#0b2545;font-size:12px;text-decoration:none !important;font-weight:700;font-family:' + FONT + ';">详情 →</a></td>'
             '<td align="center" valign="middle" style="padding:14px 12px;border-bottom:1px solid #eef1f5;font-family:' + FONT + ';">'
